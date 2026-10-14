@@ -1,0 +1,21 @@
+@import 'tailwindcss';
+
+/* Flat, square design language: no rounded corners anywhere. */
+* {
+  border-radius: 0 !important;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  overscroll-behavior: none;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.mono {
+  font-family: Consolas, 'Cascadia Mono', monospace;
+}

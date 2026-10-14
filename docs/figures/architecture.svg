@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 600" width="940" height="600" font-family="Consolas, monospace">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#71717a"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="940" height="600" fill="#0b0b0d"/>
+  <text x="24" y="34" fill="#e4e4e7" font-size="16" font-weight="bold">AK820 Companion - architecture</text>
+  <text x="24" y="54" fill="#71717a" font-size="11">user-mode interception + injection - no kernel driver - lighting over HID feature report 0x07</text>
+
+  <rect x="24" y="80" width="220" height="300" fill="#18181b" stroke="#3f3f46"/>
+  <text x="36" y="102" fill="#a1a1aa" font-size="11" font-weight="bold">REACT UI (WebView2)</text>
+  <rect x="38" y="114" width="192" height="34" fill="#0b0b0d" stroke="#3f3f46"/>
+  <text x="48" y="135" fill="#d4d4d8" font-size="11">Keymap - board + action picker</text>
+  <rect x="38" y="154" width="192" height="34" fill="#0b0b0d" stroke="#3f3f46"/>
+  <text x="48" y="175" fill="#d4d4d8" font-size="11">Macros - record / edit / trigger</text>
+  <rect x="38" y="194" width="192" height="34" fill="#0b0b0d" stroke="#3f3f46"/>
+  <text x="48" y="215" fill="#d4d4d8" font-size="11">Lighting - modes / bright / speed</text>
+  <rect x="38" y="234" width="192" height="34" fill="#0b0b0d" stroke="#3f3f46"/>
+  <text x="48" y="255" fill="#d4d4d8" font-size="11">Diagnostics - live counters</text>
+  <rect x="38" y="274" width="192" height="34" fill="#0b0b0d" stroke="#3f3f46"/>
+  <text x="48" y="295" fill="#d4d4d8" font-size="11">Profiles / Settings</text>
+  <text x="38" y="330" fill="#52525b" font-size="10">optimistic edits - 400 ms debounced saves</text>
+  <text x="38" y="346" fill="#52525b" font-size="10">status poll isolated from editors</text>
+  <text x="38" y="362" fill="#52525b" font-size="10">flat, square design language</text>
+
+  <rect x="292" y="80" width="200" height="300" fill="#18181b" stroke="#3f3f46"/>
+  <text x="304" y="102" fill="#a1a1aa" font-size="11" font-weight="bold">TAURI COMMANDS</text>
+  <text x="304" y="128" fill="#d4d4d8" font-size="10">get_status / get_store</text>
+  <text x="304" y="146" fill="#d4d4d8" font-size="10">get_catalog</text>
+  <text x="304" y="164" fill="#d4d4d8" font-size="10">set_enabled</text>
+  <text x="304" y="182" fill="#d4d4d8" font-size="10">save / create / delete_profile</text>
+  <text x="304" y="200" fill="#d4d4d8" font-size="10">set_active_profile</text>
+  <text x="304" y="218" fill="#d4d4d8" font-size="10">start / stop_recording</text>
+  <text x="304" y="236" fill="#d4d4d8" font-size="10">play_macro / stop_macro</text>
+  <text x="304" y="254" fill="#d4d4d8" font-size="10">apply_lighting / save_lighting</text>
+  <text x="304" y="272" fill="#d4d4d8" font-size="10">read_lighting_status</text>
+  <text x="304" y="290" fill="#d4d4d8" font-size="10">export / import_store</text>
+  <text x="304" y="308" fill="#d4d4d8" font-size="10">set_trace</text>
+  <text x="304" y="336" fill="#52525b" font-size="10">thin surface over AppState</text>
+  <text x="304" y="352" fill="#52525b" font-size="10">status returns a 4-field summary</text>
+
+  <rect x="540" y="80" width="376" height="150" fill="#18181b" stroke="#3f3f46"/>
+  <text x="552" y="102" fill="#a1a1aa" font-size="11" font-weight="bold">APPSTATE / RUNTIME</text>
+  <rect x="554" y="114" width="348" height="46" fill="#0b0b0d" stroke="#3f3f46"/>
+  <text x="564" y="132" fill="#d4d4d8" font-size="11">Store - profiles, macros, settings (JSON on disk)</text>
+  <text x="564" y="150" fill="#52525b" font-size="10">%APPDATA%\dev.ak820.companion\profiles.json</text>
+  <rect x="554" y="168" width="348" height="50" fill="#0b0b0d" stroke="#0ea5e9"/>
+  <text x="564" y="186" fill="#7dd3fc" font-size="11">ArcSwap&lt;RuntimeConfig&gt; - immutable snapshot</text>
+  <text x="564" y="204" fill="#52525b" font-size="10">(layer,vk) to action - combo table - macros - panic combo</text>
+
+  <rect x="540" y="248" width="376" height="216" fill="#18181b" stroke="#3f3f46"/>
+  <text x="552" y="270" fill="#a1a1aa" font-size="11" font-weight="bold">WINDOWS INPUT BACKEND (user mode)</text>
+  <rect x="554" y="282" width="348" height="52" fill="#0b0b0d" stroke="#3f3f46"/>
+  <text x="564" y="300" fill="#d4d4d8" font-size="11">hook thread - WH_KEYBOARD_LL + message pump</text>
+  <text x="564" y="318" fill="#52525b" font-size="10">no allocation - no file I/O - 1 lock per event</text>
+  <rect x="554" y="344" width="348" height="52" fill="#0b0b0d" stroke="#3f3f46"/>
+  <text x="564" y="362" fill="#d4d4d8" font-size="11">inject - SendInput, tagged 0xA820C0DE</text>
+  <text x="564" y="380" fill="#52525b" font-size="10">keys - combos - media - mouse - unicode text</text>
+  <rect x="554" y="406" width="348" height="46" fill="#0b0b0d" stroke="#3f3f46"/>
+  <text x="564" y="424" fill="#d4d4d8" font-size="11">macro worker thread</text>
+  <text x="564" y="442" fill="#52525b" font-size="10">once - repeat xN - while held - cancellable sleeps</text>
+
+  <rect x="540" y="484" width="376" height="90" fill="#18181b" stroke="#3f3f46"/>
+  <text x="552" y="506" fill="#a1a1aa" font-size="11" font-weight="bold">KEYBOARD FIRMWARE (1A2C:9605)</text>
+  <rect x="554" y="516" width="348" height="44" fill="#0b0b0d" stroke="#3f3f46"/>
+  <text x="564" y="534" fill="#d4d4d8" font-size="11">HID feature report 0x07 - lighting only</text>
+  <text x="564" y="552" fill="#52525b" font-size="10">no keymap / macro storage - no 64-byte command pipe</text>
+
+  <line x1="244" y1="230" x2="288" y2="230" stroke="#71717a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="492" y1="180" x2="536" y2="180" stroke="#71717a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="728" y1="218" x2="728" y2="278" stroke="#0ea5e9" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="736" y="252" fill="#0ea5e9" font-size="10">publish snapshot</text>
+  <line x1="492" y1="520" x2="536" y2="520" stroke="#71717a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="470" y="512" fill="#71717a" font-size="10">hidapi</text>
+
+  <path d="M 554 300 L 262 300 L 262 440 L 902 440 L 902 130" fill="none" stroke="#3f3f46" stroke-dasharray="4 3"/>
+  <text x="290" y="456" fill="#52525b" font-size="10">remapped keys are injected back to Windows (tagged, so the hook ignores its own events)</text>
+</svg>
