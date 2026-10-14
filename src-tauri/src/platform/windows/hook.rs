@@ -152,12 +152,44 @@ unsafe extern "system" fn hook_proc(code: i32, wparam: WPARAM, lparam: LPARAM) -
     let vk_code = kb.vkCode as u16;
     EVENTS.fetch_add(1, Ordering::Relaxed);
 
+    let cfg = state.config.load();
+    let bit = vk::modifier_bit(vk_code);
+    let held_mods = state.mods.load(Ordering::Relaxed);
+
+    // The panic combo must work in every state — including while recording, which
+    // swallows every other key, and even when remapping is already disabled.
+    if down {
+        let mods_now = held_mods | bit;
+        if let Some((panic_mods, panic_vk)) = cfg.panic {
+            if panic_vk == vk_code && (panic_mods & !mods_now) == 0 {
+                cfg.enabled.store(false, Ordering::Relaxed);
+                state.recording.store(false, Ordering::Relaxed);
+                PANICS.fetch_add(1, Ordering::Relaxed);
+                release_pending();
+                logging::info(&format!(
+                    "panic combo fired (vk {vk_code:02X}, mods {mods_now:02X}) — remapping disabled, recording stopped"
+                ));
+                if bit != 0 {
+                    state.mods.fetch_or(bit, Ordering::Relaxed);
+                }
+                return LRESULT(1);
+            }
+        }
+    }
+
     if state.recording.load(Ordering::Relaxed) {
+        // Keep modifier state current so the panic combo still matches mid-recording.
+        if bit != 0 {
+            if down {
+                state.mods.fetch_or(bit, Ordering::Relaxed);
+            } else {
+                state.mods.fetch_and(!bit, Ordering::Relaxed);
+            }
+        }
         record(state, vk_code, down);
         return LRESULT(1);
     }
 
-    let cfg = state.config.load();
     if !cfg.enabled.load(Ordering::Relaxed) {
         return CallNextHookEx(None, code, wparam, lparam);
     }
@@ -166,25 +198,7 @@ unsafe extern "system" fn hook_proc(code: i32, wparam: WPARAM, lparam: LPARAM) -
         macros::cancel_active();
     }
 
-    let bit = vk::modifier_bit(vk_code);
-    let held_mods = state.mods.load(Ordering::Relaxed);
-
     if down {
-        let mods_now = held_mods | bit;
-        if let Some((panic_mods, panic_vk)) = cfg.panic {
-            if panic_vk == vk_code && (panic_mods & !mods_now) == 0 {
-                cfg.enabled.store(false, Ordering::Relaxed);
-                PANICS.fetch_add(1, Ordering::Relaxed);
-                release_pending();
-                logging::info(&format!(
-                    "panic combo fired (vk {vk_code:02X}, mods {mods_now:02X}) — remapping disabled"
-                ));
-                if bit != 0 {
-                    state.mods.fetch_or(bit, Ordering::Relaxed);
-                }
-                return LRESULT(1);
-            }
-        }
         if Some(vk_code) == cfg.layer_key_vk {
             state.layer.store(1, Ordering::Relaxed);
             return LRESULT(1);

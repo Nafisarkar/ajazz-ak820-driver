@@ -55,7 +55,9 @@ export function Settings() {
               className="h-0 w-0 border-0 p-0 opacity-0"
               onKeyDown={(e) => {
                 e.preventDefault()
-                if (e.key === 'Escape') {
+                // Bare Esc cancels; Esc with modifiers is a valid combo (the default
+                // panic is Ctrl+Alt+Esc, which must be re-bindable).
+                if (e.key === 'Escape' && !e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey) {
                   setCapturingPanic(false)
                   return
                 }

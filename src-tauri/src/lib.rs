@@ -6,13 +6,23 @@ mod profile;
 mod state;
 
 use std::sync::atomic::Ordering;
+use std::sync::OnceLock;
 
-use tauri::menu::{Menu, MenuItem};
+use tauri::menu::{CheckMenuItem, Menu, MenuItem};
 use tauri::tray::TrayIconBuilder;
 use tauri::{Manager, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
 
 use state::AppState;
+
+/// Tray menu item handle, kept so the UI toggle and the tray stay in sync.
+static TRAY_TOGGLE: OnceLock<CheckMenuItem<tauri::Wry>> = OnceLock::new();
+
+pub fn sync_tray(enabled: bool) {
+    if let Some(item) = TRAY_TOGGLE.get() {
+        let _ = item.set_checked(enabled);
+    }
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -42,10 +52,18 @@ pub fn run() {
             platform::hook::start(config, recording, recorded)
                 .map_err(|e| Box::<dyn std::error::Error>::from(e))?;
 
-            let toggle = MenuItem::with_id(app, "toggle", "Enable remapping", true, None::<&str>)?;
+            let toggle = CheckMenuItem::with_id(
+                app,
+                "toggle",
+                "Remapping enabled",
+                true,
+                false,
+                None::<&str>,
+            )?;
             let show = MenuItem::with_id(app, "show", "Show window", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&toggle, &show, &quit])?;
+            let _ = TRAY_TOGGLE.set(toggle.clone());
             let mut builder = TrayIconBuilder::with_id("main")
                 .menu(&menu)
                 .tooltip("AK820 Companion")
@@ -58,6 +76,7 @@ pub fn run() {
                             platform::hook::release_pending();
                         }
                         state.set_enabled(next);
+                        sync_tray(next);
                     }
                     "show" => {
                         if let Some(window) = app.get_webview_window("main") {

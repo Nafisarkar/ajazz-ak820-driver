@@ -121,6 +121,7 @@ pub fn set_enabled(state: State<'_, AppState>, enabled: bool) {
         platform::hook::release_pending();
     }
     state.set_enabled(enabled);
+    crate::sync_tray(enabled);
 }
 
 #[tauri::command]
