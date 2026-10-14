@@ -42,7 +42,9 @@ while ((m = keyRe.exec(xml))) {
   if (nums.length !== 4 || nums.some((n) => !Number.isFinite(n))) continue
   const [x, y, w, h] = nums
   if (w === 0 || h === 0) continue // numpad aliases not present on this board
-  const id = `${row}#${col}`
+  // Dedupe by geometry, not row_col: the vendor file has at least one wrong
+  // row_col (L is marked 3#0, same as CapsLock) which would hide a real key.
+  const id = `${x}#${y}#${w}#${h}`
   if (seen.has(id)) continue
   seen.add(id)
   const clean = name
@@ -54,10 +56,21 @@ while ((m = keyRe.exec(xml))) {
   keys.push({ name: clean, hid: parseInt(code, 16), index: Number(index), row: Number(row), col: Number(col), x, y, w, h })
 }
 
-keys.sort((a, b) => (a.row - b.row) || (a.col - b.col) || (a.x - b.x))
+// Derive row/col from geometry rather than trusting the vendor's row_col
+// attribute (it has typos, e.g. L marked as 3#0).
+const rows = [...new Set(keys.map((k) => k.y))].sort((a, b) => a - b)
+for (const [rowIndex, y] of rows.entries()) {
+  const inRow = keys.filter((k) => k.y === y).sort((a, b) => a.x - b.x)
+  inRow.forEach((key, colIndex) => {
+    key.row = rowIndex
+    key.col = colIndex
+  })
+}
+
+keys.sort((a, b) => a.row - b.row || a.col - b.col)
 
 const banner = `// Generated from the vendor layout KB-K102.xml (key geometry only — no vendor artwork).
-// Regenerate with: bun tools/gen-layout.ts
+// Regenerate with: bun run tools/gen-layout.ts <path-to-KB-K102.xml>
 
 export interface KeyDef {
   /** Label drawn on the keycap */
@@ -66,6 +79,7 @@ export interface KeyDef {
   hid: number
   /** Vendor key index (lighting index; not used for host-side remapping) */
   index: number
+  /** Row/column derived from the key's geometry */
   row: number
   col: number
   x: number
@@ -80,6 +94,6 @@ export const BOARD = { width: 600, height: 291 } as const
 export const KEYS: KeyDef[] = ${JSON.stringify(keys, null, 2)}
 `
 
-mkdirSync('f:/Dev/Test/ak820-companion/src/data', { recursive: true })
+mkdirSync(new URL('../src/data', import.meta.url), { recursive: true })
 writeFileSync(OUT, banner)
 console.log(`wrote ${keys.length} keys to ${OUT}`)
